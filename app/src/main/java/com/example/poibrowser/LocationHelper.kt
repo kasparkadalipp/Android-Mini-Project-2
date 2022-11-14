@@ -12,7 +12,7 @@ class LocationHelper(private val mContext: Context) {
 
     private val locationRequest  = LocationRequest.Builder(
         Priority.PRIORITY_HIGH_ACCURACY, // Optional
-        10000
+        5000
     ).build()
 
     var registeredCallbacks: ArrayList<LocationCallback> = arrayListOf()
