@@ -54,7 +54,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
-        Toast.makeText(this, " ${marker.title}",
+        Toast.makeText(
+            this, " ${marker.title}",
             Toast.LENGTH_SHORT
         ).show()
         return false
@@ -75,7 +76,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
                 if (e != null) {
                     Log.e("MapsActivity", "Something went wrong! ${e.message}")
                 } else {
-                    val queryResult = result.get("query").asJsonObject.get("pages").asJsonObject.entrySet()
+                    val queryResult =
+                        result.get("query").asJsonObject.get("pages").asJsonObject.entrySet()
                     for ((_, value) in queryResult) {
                         // TODO create objects list from values and don't update existing ones
                         val marker = value.asJsonObject
@@ -84,14 +86,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
                         val thumbnail = marker.get("thumbnail")?.asJsonObject?.get("source")
                         val description = marker.get("description")
                         val location = marker.get("coordinates").asJsonArray.first().asJsonObject
-                        val coordinates = LatLng(location.get("lat").asDouble, location.get("lon").asDouble)
-                        mMap.addMarker(MarkerOptions().position(coordinates).title(title.toString()))
+                        val coordinates =
+                            LatLng(location.get("lat").asDouble, location.get("lon").asDouble)
+                        mMap.addMarker(
+                            MarkerOptions().position(coordinates).title(title.toString())
+                        )
                     }
                 }
             }
     }
 
-    val initialLocation = object : LocationCallback() {
+    private val initialLocation = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
             val location = result.locations.first()
             val coordinates = LatLng(location.latitude, location.longitude)
