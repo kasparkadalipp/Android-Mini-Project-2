@@ -29,8 +29,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     private lateinit var locationHelper: LocationHelper
     private lateinit var requestHelper: RequestHelper
 
-    private var isInitialLocation = true
-    private var locationPermissionDenied = false
+    private var currentMapMarkers = mutableListOf<Marker>()
+
+    private var isInitialLocationCall = true
+    private var isLocationPermissionDenied = false
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -75,6 +77,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
     private val pointOfInterestRequestHandler =
         RequestHelper.PointOfInterestRequestHandler { poiList: List<PointOfInterest> ->
+            removeExpiredMarkers(currentMapMarkers, poiList)
             poiList.forEach { poi ->
                 val poiLocation = poi.lat?.let { poi.lon?.let { it1 -> LatLng(it, it1) } }
                 poiLocation?.let {
@@ -82,20 +85,36 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
                         .position(it)
                         .title(poi.title)
                 }?.let {
-                    mMap.addMarker(
-                        it
-                    )
+                    val marker: Marker? = mMap.addMarker(it)
+                    marker?.let { it1 -> currentMapMarkers.add(it1) }
                 }
             }
         }
+
+    /**
+     * Remove expired markers by comparing the locations of current markers and new points of interest
+     */
+    private fun removeExpiredMarkers(
+        previousMarkers: MutableList<Marker>,
+        poiList: List<PointOfInterest>
+    ) {
+        val locations = poiList.map { poi ->
+            poi.lat?.let { poi.lon?.let { it1 -> LatLng(it, it1) } }
+        }
+        previousMarkers.forEach { marker ->
+            if (!locations.contains(marker.position)) {
+                marker.remove()
+            }
+        }
+    }
 
     private val handleLocationResult = object : LocationCallback() {
         @SuppressLint("MissingPermission")
         override fun onLocationResult(result: LocationResult) {
             mMap.isMyLocationEnabled = true
             val location = result.locations.first()
-            if (isInitialLocation) {
-                isInitialLocation = false
+            if (isInitialLocationCall) {
+                isInitialLocationCall = false
                 mMap.moveCamera(
                     CameraUpdateFactory.newLatLngZoom(
                         LatLng(
@@ -113,9 +132,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     override fun onResumeFragments() {
         super.onResumeFragments()
         checkLocationPermissions()
-        if (locationPermissionDenied) {
+        if (isLocationPermissionDenied) {
             showMissingPermissionError()
-            locationPermissionDenied = false
+            isLocationPermissionDenied = false
         }
     }
 
@@ -165,6 +184,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     }
 
     private fun showMissingPermissionError() {
+        // TODO: Instead of a toast, show a dialog to change the permission via settings
         Toast.makeText(
             this,
             "Location permissions must be allowed in order for the app to work properly. Please allow permissions in the app settings.",
@@ -189,7 +209,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             checkLocationPermissions()
         } else {
-            locationPermissionDenied = true
+            isLocationPermissionDenied = true
         }
     }
 }
