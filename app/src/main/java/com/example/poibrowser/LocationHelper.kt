@@ -8,7 +8,7 @@ import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
 
-class LocationHelper(private val mContext: Context, private val activity: MapsActivity) {
+class LocationHelper(private val mContext: Context, private val mapsActivity: MapsActivity) {
 
     // !NB Don't forget to add 'play-services-location' gradle dependency!
 
@@ -16,6 +16,10 @@ class LocationHelper(private val mContext: Context, private val activity: MapsAc
         Priority.PRIORITY_HIGH_ACCURACY, // Optional
         5000
     ).build()
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+    }
 
     private var registeredCallbacks: ArrayList<LocationCallback> = arrayListOf()
 
@@ -32,10 +36,12 @@ class LocationHelper(private val mContext: Context, private val activity: MapsAc
 
         checkLocationSettingsTask.addOnFailureListener { exception ->
             stopLocationUpdates()
-            // TODO: Rethink this
-            // It's possible we need to request location permissions in the activity instead
             if (exception is ApiException) {
-                ResolvableApiException(exception.status).startResolutionForResult(activity, 1)
+                // The device location needs to be enabled, therefore show the user a dialog to enable location
+                ResolvableApiException(exception.status).startResolutionForResult(
+                    mapsActivity,
+                    LOCATION_PERMISSION_REQUEST_CODE
+                )
             }
         }
     }

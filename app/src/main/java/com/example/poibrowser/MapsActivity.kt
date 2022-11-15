@@ -1,10 +1,14 @@
 package com.example.poibrowser
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -23,7 +27,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
     private lateinit var locationHelper: LocationHelper
-    private var initialLaunch = true
+
+    private var locationPermissionDenied = false
+
+    companion object {
+        private const val LOCATION_PERMISSION_REQUEST_CODE = 1
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,8 +42,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+
         locationHelper = LocationHelper(applicationContext, this)
-        if (initialLaunch) locationHelper.requestLocationUpdates(initialLocation)
+
         mapFragment.getMapAsync(this)
     }
 
@@ -51,6 +61,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.setOnMarkerClickListener(this)
+        checkLocationPermissions()
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
@@ -59,6 +70,60 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
             Toast.LENGTH_SHORT
         ).show()
         return false
+    }
+
+    private fun showMissingPermissionError() {
+        Toast.makeText(
+            this,
+            "Location permissions must be allowed in order for the app to work properly. Please allow permissions in the app settings.",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
+    private fun checkLocationPermissions() {
+        // 1. Check if permissions are granted, if so, enable the my location layer
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            locationHelper.requestLocationUpdates(initialLocation)
+            return
+        }
+
+        // 2. If if a permission rationale dialog should be shown
+        if (ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) || ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+            return
+        }
+
+        // 3. Otherwise, request permission
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ),
+            LOCATION_PERMISSION_REQUEST_CODE
+        )
+
     }
 
     private fun requestMarkers(latitude: Double, longitude: Double) {
@@ -109,6 +174,35 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         @SuppressLint("MissingPermission")
         override fun onLocationResult(result: LocationResult) {
             mMap.isMyLocationEnabled = true
+        }
+    }
+
+    override fun onResumeFragments() {
+        super.onResumeFragments()
+        if (locationPermissionDenied) {
+            showMissingPermissionError()
+            locationPermissionDenied = false
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
+            super.onRequestPermissionsResult(
+                requestCode,
+                permissions,
+                grantResults
+            )
+            return
+        }
+
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            checkLocationPermissions()
+        } else {
+            locationPermissionDenied = true
         }
     }
 }
