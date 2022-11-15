@@ -3,31 +3,33 @@ package com.example.poibrowser
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
 import com.example.poibrowser.databinding.ActivityMapsBinding
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.GoogleMap.*
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.koushikdutta.ion.Ion
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListener {
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
     private lateinit var locationHelper: LocationHelper
+    private lateinit var requestHelper: RequestHelper
 
+    private var isInitialLocation = true
     private var locationPermissionDenied = false
 
     companion object {
@@ -42,10 +44,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-
         locationHelper = LocationHelper(applicationContext, this)
-
         mapFragment.getMapAsync(this)
+
+        requestHelper = RequestHelper(applicationContext, pointOfInterestRequestHandler)
     }
 
     override fun onResume() {
@@ -61,7 +63,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         mMap.setOnMarkerClickListener(this)
-        checkLocationPermissions()
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
@@ -90,7 +91,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            locationHelper.requestLocationUpdates(initialLocation)
             return
         }
 
@@ -126,59 +126,47 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
     }
 
-    private fun requestMarkers(latitude: Double, longitude: Double) {
-        Ion.with(applicationContext)
-            .load("https://en.wikipedia.org/w/api.php?action=query")
-            .addQuery("generator", "geosearch")
-            .addQuery("prop", "coordinates|pageimages|description|info")
-            .addQuery("pithumbsize", "400")
-            .addQuery("ggsradius", "500")
-            .addQuery("ggslimit", "10")
-            .addQuery("format", "json")
-            .addQuery("ggscoord", "${latitude}|${longitude}")
-            .asJsonObject()
-            .setCallback { e, result ->
-                if (e != null) {
-                    Log.e("MapsActivity", "Something went wrong! ${e.message}")
-                } else {
-                    val queryResult =
-                        result.get("query").asJsonObject.get("pages").asJsonObject.entrySet()
-                    for ((_, value) in queryResult) {
-                        // TODO create objects list from values and don't update existing ones
-                        val marker = value.asJsonObject
-                        val pageId = marker.get("pageid")
-                        val title = marker.get("title")
-                        val thumbnail = marker.get("thumbnail")?.asJsonObject?.get("source")
-                        val description = marker.get("description")
-                        val location = marker.get("coordinates").asJsonArray.first().asJsonObject
-                        val coordinates =
-                            LatLng(location.get("lat").asDouble, location.get("lon").asDouble)
-                        mMap.addMarker(
-                            MarkerOptions().position(coordinates).title(title.toString())
-                        )
-                    }
+    private val pointOfInterestRequestHandler =
+        RequestHelper.PointOfInterestRequestHandler { poiList: List<PointOfInterest> ->
+            poiList.forEach { poi ->
+                val poiLocation = poi.lat?.let { poi.lon?.let { it1 -> LatLng(it, it1) } }
+                poiLocation?.let {
+                    MarkerOptions()
+                        .position(it)
+                        .title(poi.title)
+                }?.let {
+                    mMap.addMarker(
+                        it
+                    )
                 }
             }
-    }
-
-    private val initialLocation = object : LocationCallback() {
-        override fun onLocationResult(result: LocationResult) {
-            val location = result.locations.first()
-            val coordinates = LatLng(location.latitude, location.longitude)
-            requestMarkers(location.latitude, location.longitude)
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinates, 15F))
         }
-    }
 
     private val handleLocationResult = object : LocationCallback() {
         @SuppressLint("MissingPermission")
         override fun onLocationResult(result: LocationResult) {
             mMap.isMyLocationEnabled = true
+            val location = result.locations.first()
+            CoroutineScope(Main).launch {
+                requestHelper.getPointsOfInterest(location.latitude, location.longitude)
+            }
+
+            if (isInitialLocation) {
+                isInitialLocation = false
+                mMap.moveCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        LatLng(
+                            location.latitude, location.longitude
+                        ), 15f
+                    )
+                )
+            }
         }
     }
 
     override fun onResumeFragments() {
         super.onResumeFragments()
+        checkLocationPermissions()
         if (locationPermissionDenied) {
             showMissingPermissionError()
             locationPermissionDenied = false
