@@ -73,12 +73,50 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         return false
     }
 
-    private fun showMissingPermissionError() {
-        Toast.makeText(
-            this,
-            "Location permissions must be allowed in order for the app to work properly. Please allow permissions in the app settings.",
-            Toast.LENGTH_LONG
-        ).show()
+    private val pointOfInterestRequestHandler =
+        RequestHelper.PointOfInterestRequestHandler { poiList: List<PointOfInterest> ->
+            poiList.forEach { poi ->
+                val poiLocation = poi.lat?.let { poi.lon?.let { it1 -> LatLng(it, it1) } }
+                poiLocation?.let {
+                    MarkerOptions()
+                        .position(it)
+                        .title(poi.title)
+                }?.let {
+                    mMap.addMarker(
+                        it
+                    )
+                }
+            }
+        }
+
+    private val handleLocationResult = object : LocationCallback() {
+        @SuppressLint("MissingPermission")
+        override fun onLocationResult(result: LocationResult) {
+            mMap.isMyLocationEnabled = true
+            val location = result.locations.first()
+            if (isInitialLocation) {
+                isInitialLocation = false
+                mMap.moveCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        LatLng(
+                            location.latitude, location.longitude
+                        ), 15f
+                    )
+                )
+            }
+            CoroutineScope(Main).launch {
+                requestHelper.getPointsOfInterest(location.latitude, location.longitude)
+            }
+        }
+    }
+
+    override fun onResumeFragments() {
+        super.onResumeFragments()
+        checkLocationPermissions()
+        if (locationPermissionDenied) {
+            showMissingPermissionError()
+            locationPermissionDenied = false
+        }
     }
 
     private fun checkLocationPermissions() {
@@ -126,51 +164,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
     }
 
-    private val pointOfInterestRequestHandler =
-        RequestHelper.PointOfInterestRequestHandler { poiList: List<PointOfInterest> ->
-            poiList.forEach { poi ->
-                val poiLocation = poi.lat?.let { poi.lon?.let { it1 -> LatLng(it, it1) } }
-                poiLocation?.let {
-                    MarkerOptions()
-                        .position(it)
-                        .title(poi.title)
-                }?.let {
-                    mMap.addMarker(
-                        it
-                    )
-                }
-            }
-        }
-
-    private val handleLocationResult = object : LocationCallback() {
-        @SuppressLint("MissingPermission")
-        override fun onLocationResult(result: LocationResult) {
-            mMap.isMyLocationEnabled = true
-            val location = result.locations.first()
-            CoroutineScope(Main).launch {
-                requestHelper.getPointsOfInterest(location.latitude, location.longitude)
-            }
-
-            if (isInitialLocation) {
-                isInitialLocation = false
-                mMap.moveCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        LatLng(
-                            location.latitude, location.longitude
-                        ), 15f
-                    )
-                )
-            }
-        }
-    }
-
-    override fun onResumeFragments() {
-        super.onResumeFragments()
-        checkLocationPermissions()
-        if (locationPermissionDenied) {
-            showMissingPermissionError()
-            locationPermissionDenied = false
-        }
+    private fun showMissingPermissionError() {
+        Toast.makeText(
+            this,
+            "Location permissions must be allowed in order for the app to work properly. Please allow permissions in the app settings.",
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     override fun onRequestPermissionsResult(
