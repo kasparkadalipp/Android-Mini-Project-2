@@ -40,7 +40,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
     override fun onResume() {
         super.onResume()
-        locationHelper.requestLocationUpdates(myCallBackImplementation)
+        locationHelper.requestLocationUpdates(handleLocationResult)
     }
 
     override fun onPause() {
@@ -100,7 +100,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         }
     }
 
-    val myCallBackImplementation = object : LocationCallback() {
+    private val handleLocationResult = object : LocationCallback() {
         @SuppressLint("MissingPermission")
         override fun onLocationResult(result: LocationResult) {
             mMap.isMyLocationEnabled = true
