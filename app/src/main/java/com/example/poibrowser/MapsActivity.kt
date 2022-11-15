@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -13,10 +14,12 @@ import com.google.android.gms.maps.model.LatLng
 import com.example.poibrowser.databinding.ActivityMapsBinding
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.maps.GoogleMap.*
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.koushikdutta.ion.Ion
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListener {
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
     private lateinit var locationHelper: LocationHelper
@@ -47,6 +50,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.setOnMarkerClickListener(this)
+    }
+
+    override fun onMarkerClick(marker: Marker): Boolean {
+        Toast.makeText(this, " ${marker.title}",
+            Toast.LENGTH_SHORT
+        ).show()
+        return false
     }
 
     private fun requestMarkers(latitude: Double, longitude: Double) {
@@ -74,7 +85,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         val description = marker.get("description")
                         val location = marker.get("coordinates").asJsonArray.first().asJsonObject
                         val coordinates = LatLng(location.get("lat").asDouble, location.get("lon").asDouble)
-                        mMap.addMarker(MarkerOptions().position(coordinates).title(title.toString())) // TODO override on click
+                        mMap.addMarker(MarkerOptions().position(coordinates).title(title.toString()))
                     }
                 }
             }
