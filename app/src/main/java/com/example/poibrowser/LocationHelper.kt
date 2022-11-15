@@ -12,6 +12,8 @@ class LocationHelper(private val mContext: Context, private val mapsActivity: Ma
 
     // !NB Don't forget to add 'play-services-location' gradle dependency!
 
+    private var shouldShowEnableLocationRequest = true
+
     private val locationRequest = LocationRequest.Builder(
         Priority.PRIORITY_HIGH_ACCURACY, // Optional
         5000
@@ -36,12 +38,13 @@ class LocationHelper(private val mContext: Context, private val mapsActivity: Ma
 
         checkLocationSettingsTask.addOnFailureListener { exception ->
             stopLocationUpdates()
-            if (exception is ApiException) {
+            if (exception is ApiException && shouldShowEnableLocationRequest) {
                 // The device location needs to be enabled, therefore show the user a dialog to enable location
                 ResolvableApiException(exception.status).startResolutionForResult(
                     mapsActivity,
                     LOCATION_PERMISSION_REQUEST_CODE
                 )
+                shouldShowEnableLocationRequest = false
             }
         }
     }
