@@ -24,7 +24,8 @@ class RequestHelper(
     ) {
         withContext(IO) {
             Ion.with(mContext)
-                .load("https://en.wikipedia.org/w/api.php?action=query")
+                .load("https://en.wikipedia.org/w/api.php")
+                .addQuery("action", "query")
                 .addQuery("generator", "geosearch")
                 .addQuery("prop", "coordinates|pageimages|description|info")
                 .addQuery("pithumbsize", "400")
