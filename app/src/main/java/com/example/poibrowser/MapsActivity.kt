@@ -33,7 +33,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
-        locationHelper = LocationHelper(applicationContext)
+        locationHelper = LocationHelper(applicationContext, this)
         if (initialLaunch) locationHelper.requestLocationUpdates(initialLocation)
         mapFragment.getMapAsync(this)
     }
