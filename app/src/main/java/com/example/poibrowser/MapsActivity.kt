@@ -79,7 +79,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         RequestHelper.PointOfInterestRequestHandler { poiList: List<PointOfInterest> ->
             removeExpiredMarkers(currentMapMarkers, poiList)
             poiList.forEach { poi ->
-                val poiLocation = poi.lat?.let { poi.lon?.let { it1 -> LatLng(it, it1) } }
+                val poiLocation = poi.latitude?.let { poi.longitude?.let { it1 -> LatLng(it, it1) } }
                 poiLocation?.let {
                     MarkerOptions()
                         .position(it)
@@ -99,7 +99,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         poiList: List<PointOfInterest>
     ) {
         val locations = poiList.map { poi ->
-            poi.lat?.let { poi.lon?.let { it1 -> LatLng(it, it1) } }
+            poi.latitude?.let { poi.longitude?.let { it1 -> LatLng(it, it1) } }
         }
         previousMarkers.forEach { marker ->
             if (!locations.contains(marker.position)) {

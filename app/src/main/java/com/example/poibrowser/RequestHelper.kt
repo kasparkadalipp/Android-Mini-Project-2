@@ -2,9 +2,9 @@ package com.example.poibrowser
 
 import android.content.Context
 import android.util.Log
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.gson.Gson
 import com.google.gson.JsonElement
+import com.google.gson.annotations.SerializedName
 import com.koushikdutta.ion.Ion
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
@@ -56,29 +56,34 @@ class RequestHelper(
 
     private fun fromQueryResultToPointsOfInterest(queryResult: Set<Map.Entry<String, JsonElement>>): List<PointOfInterest> {
         return queryResult.map { (_, value) ->
-
-            // TODO: Map with Gson instead
-            val pageId = value.asJsonObject.get("pageid").asInt
-            val title = value.asJsonObject.get("title").asString
-            val description = value.asJsonObject.get("description").asString
-            //val thumbnail = value.asJsonObject.get("thumbnail").asJsonObject
-            //val thumbnailUrl = thumbnail.get("source").asString
-            val coordinates = value.asJsonObject.get("coordinates").asJsonArray
-            val coordinate = coordinates[0].asJsonObject
-            val lat = coordinate.get("lat").asDouble
-            val lon = coordinate.get("lon").asDouble
-            val latLng = LatLng(lat, lon)
-            val markerOptions = MarkerOptions().position(latLng).title(title)
+            val wikiPage = Gson().fromJson(value, Page::class.java)
+            val coordinates = wikiPage.coordinates.first()
 
             PointOfInterest(
-                pageId,
-                title,
-                description,
-                coordinates,
-                coordinate,
-                lat,
-                lon
+                pageId = wikiPage.id,
+                title = wikiPage.title,
+                description = wikiPage.description,
+//                thumbnailUrl = page.thumbnail?.url
+                latitude = coordinates.latitude,
+                longitude = coordinates.longitude
             )
         }
     }
+
+    data class Coordinates(
+        @SerializedName("lat") val latitude: Double,
+        @SerializedName("lon") val longitude: Double,
+    )
+
+    data class Source(
+        @SerializedName("source") val url: String,
+    )
+
+    data class Page(
+        @SerializedName("pageid") val id: Int,
+        @SerializedName("title") val title: String,
+        @SerializedName("description") val description: String,
+        @SerializedName("coordinates") val coordinates: List<Coordinates>,
+        @SerializedName("thumbnail") val thumbnail: Source
+    )
 }
