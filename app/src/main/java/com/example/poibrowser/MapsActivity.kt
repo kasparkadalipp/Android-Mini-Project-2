@@ -64,14 +64,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         mMap = googleMap
         mMap.setOnMarkerClickListener(this)
         mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.style_json))
+        mMap.setInfoWindowAdapter(MyInfoWindowAdapter(this))
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
         marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
-        Toast.makeText(
-            this, " ${marker.title}",
-            Toast.LENGTH_SHORT
-        ).show()
         return false
     }
 

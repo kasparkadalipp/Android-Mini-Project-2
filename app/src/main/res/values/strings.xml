@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">PoI Browser</string>
     <string name="title_activity_maps">MapsActivity</string>
+    <string name="info_window_title">Title</string>
+    <string name="info_window_description">Description</string>
+    <string name="read_more">Read more</string>
 </resources>
