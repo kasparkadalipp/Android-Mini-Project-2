@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
@@ -113,7 +114,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
     private val pointOfInterestRequestHandler =
         RequestHelper.PointOfInterestRequestHandler { poiList: List<PointOfInterest> ->
-            removeExpiredMarkers(currentMapMarkers, poiList)
+            currentMapMarkers = removeExpiredMarkers(currentMapMarkers, poiList)
             poiList.forEach { poi ->
                 val locations = currentMapMarkers.map { it.value.pageId }
                 if (!locations.contains(poi.pageId)) {
@@ -130,13 +131,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     private fun removeExpiredMarkers(
         previousMarkers: MutableMap<Marker, PointOfInterest>,
         poiList: List<PointOfInterest>
-    ) {
+    ) : MutableMap<Marker, PointOfInterest> {
         val locations = poiList.map { poi -> poi.latLng }
         previousMarkers.keys.forEach { marker ->
             if (!locations.contains(marker.position)) {
                 marker.remove()
             }
         }
+        return previousMarkers.filter { m -> locations.contains(m.value.latLng) }.toMutableMap()
     }
 
     private val handleLocationResult = object : LocationCallback() {
