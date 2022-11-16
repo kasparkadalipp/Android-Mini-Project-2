@@ -67,7 +67,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         mMap = googleMap
         mMap.setOnMarkerClickListener(this)
         mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.style_json))
-//        mMap.setInfoWindowAdapter(InfoWindowAdapter(this, mMap)) // TODO infoWindow
         checkLocationPermissions()
     }
 
@@ -87,7 +86,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
                 openWikiPage(wikiPage.pageId)
             }
         }
-        return false
+        return true
     }
 
     private fun openWikiPage(pageId: Int) {
