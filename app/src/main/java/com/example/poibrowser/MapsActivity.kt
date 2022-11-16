@@ -119,9 +119,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         previousMarkers: MutableList<Marker>,
         poiList: List<PointOfInterest>
     ) {
-        val locations = poiList.map { poi ->
-            poi.latitude?.let { poi.longitude?.let { it1 -> LatLng(it, it1) } }
-        }
+        val locations = poiList.map { poi -> poi.latLng }
         previousMarkers.forEach { marker ->
             if (!locations.contains(marker.position)) {
                 marker.remove()
