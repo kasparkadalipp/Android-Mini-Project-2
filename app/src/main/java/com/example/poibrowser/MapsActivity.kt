@@ -4,7 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -30,7 +30,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     private var currentMapMarkers = mutableListOf<Marker>()
 
     private var isInitialLocationCall = true
-    private var isLocationPermissionDenied = false
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -65,6 +64,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         mMap.setOnMarkerClickListener(this)
         mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.style_json))
         mMap.setInfoWindowAdapter(MyInfoWindowAdapter(this))
+        checkLocationPermissions()
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
@@ -89,7 +89,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         }
 
     /**
-     * Remove expired markers by comparing the locations of current markers and new points of interest
+     * Remove expired markers by comparing the locations of current markers and new points of interest.
+     * If an existing marker's location is not included in the new points of interest, remove it.
      */
     private fun removeExpiredMarkers(
         previousMarkers: MutableList<Marker>,
@@ -126,15 +127,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         }
     }
 
-    override fun onResumeFragments() {
-        super.onResumeFragments()
-        checkLocationPermissions()
-        if (isLocationPermissionDenied) {
-            showMissingPermissionError()
-            isLocationPermissionDenied = false
-        }
-    }
-
     private fun checkLocationPermissions() {
         // 1. Check if permissions are granted, if so, enable the my location layer
         if (ContextCompat.checkSelfPermission(
@@ -145,6 +137,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
+            mMap.isMyLocationEnabled = true
             return
         }
 
@@ -180,13 +173,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
     }
 
-    private fun showMissingPermissionError() {
+    private fun showMissingPermissionAlert() {
         // TODO: Instead of a toast, show a dialog to change the permission via settings
-        Toast.makeText(
-            this,
-            "Location permissions must be allowed in order for the app to work properly. Please allow permissions in the app settings.",
-            Toast.LENGTH_LONG
-        ).show()
+
+        AlertDialog.Builder(this)
+            .setTitle("Location permission required")
+            .setMessage("Location permissions must be allowed in order for the app to work properly. Please allow location permissions in the app settings.",)
+            .setPositiveButton("OK") { dialog, which ->
+                dialog.dismiss()
+
+            }
+            .show()
     }
 
     override fun onRequestPermissionsResult(
@@ -195,18 +192,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         grantResults: IntArray
     ) {
         if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
-            super.onRequestPermissionsResult(
-                requestCode,
-                permissions,
-                grantResults
-            )
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults)
             return
         }
 
-        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            checkLocationPermissions()
-        } else {
-            isLocationPermissionDenied = true
+        if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+            showMissingPermissionAlert()
+            return
         }
     }
 }
