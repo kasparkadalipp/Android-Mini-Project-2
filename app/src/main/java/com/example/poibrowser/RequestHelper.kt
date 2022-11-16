@@ -2,6 +2,7 @@ package com.example.poibrowser
 
 import android.content.Context
 import android.util.Log
+import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
@@ -63,7 +64,8 @@ class RequestHelper(
                 pageId = wikiPage.id,
                 title = wikiPage.title,
                 description = wikiPage.description,
-//                thumbnailUrl = page.thumbnail?.url
+                thumbnailUrl = wikiPage.thumbnail?.url,
+                latLng = LatLng(coordinates.latitude, coordinates.longitude),
                 latitude = coordinates.latitude,
                 longitude = coordinates.longitude
             )
@@ -84,6 +86,6 @@ class RequestHelper(
         @SerializedName("title") val title: String,
         @SerializedName("description") val description: String,
         @SerializedName("coordinates") val coordinates: List<Coordinates>,
-        @SerializedName("thumbnail") val thumbnail: Source
+        @SerializedName("thumbnail") val thumbnail: Source?
     )
 }

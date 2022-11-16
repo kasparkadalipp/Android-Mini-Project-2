@@ -9,7 +9,7 @@
     android:gravity="center|top">
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/info_window_thumbnail"
         android:layout_width="147dp"
         android:layout_height="164dp"
         android:layout_marginStart="16dp"
@@ -29,7 +29,7 @@
         android:ellipsize="end"
         android:text="@string/info_window_title"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageView"
+        app:layout_constraintStart_toEndOf="@+id/info_window_thumbnail"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -38,19 +38,19 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:text="@string/info_window_description"
-        app:layout_constraintBottom_toTopOf="@+id/read_more_button"
+        app:layout_constraintBottom_toTopOf="@+id/info_window_button"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageView"
+        app:layout_constraintStart_toEndOf="@+id/info_window_thumbnail"
         app:layout_constraintTop_toBottomOf="@+id/info_title"
         app:layout_constraintVertical_bias="0.5" />
 
     <Button
-        android:id="@+id/read_more_button"
+        android:id="@+id/info_window_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/read_more"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageView" />
+        app:layout_constraintStart_toEndOf="@+id/info_window_thumbnail" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

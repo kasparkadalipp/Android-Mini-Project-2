@@ -76,15 +76,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         RequestHelper.PointOfInterestRequestHandler { poiList: List<PointOfInterest> ->
             removeExpiredMarkers(currentMapMarkers, poiList)
             poiList.forEach { poi ->
-                val poiLocation = poi.latitude?.let { poi.longitude?.let { it1 -> LatLng(it, it1) } }
-                poiLocation?.let {
-                    MarkerOptions()
-                        .position(it)
-                        .title(poi.title)
-                }?.let {
-                    val marker: Marker? = mMap.addMarker(it)
-                    marker?.let { it1 -> currentMapMarkers.add(it1) }
-                }
+                val marker: Marker? = mMap.addMarker(MarkerOptions()
+                    .position(poi.latLng)
+                    .title(poi.title)
+                    .snippet("""{"description":"${poi.description}","pageId":"${poi.pageId}"}"""
+                    )
+//                    .icon(poi.thumbnailUrl) // TODO
+                )
+                marker?.let { currentMapMarkers.add(it) }
             }
         }
 
@@ -178,7 +177,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
         AlertDialog.Builder(this)
             .setTitle("Location permission required")
-            .setMessage("Location permissions must be allowed in order for the app to work properly. Please allow location permissions in the app settings.",)
+            .setMessage("Location permissions must be allowed in order for the app to work properly. Please allow location permissions in the app settings.")
             .setPositiveButton("OK") { dialog, which ->
                 dialog.dismiss()
 
