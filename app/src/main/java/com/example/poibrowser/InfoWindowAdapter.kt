@@ -26,7 +26,7 @@ class InfoWindowAdapter(val context: Context, val mMap: GoogleMap) : InfoWindowA
         mMap.setOnInfoWindowClickListener { openWikiPage(wikiPage.pageId) }
 
         if (wikiPage.thumbnailUrl.isNotEmpty()) {
-            // TODO doesn't infoWindow
+            // TODO doesn't update infoWindow image
             Ion.with(infoWindow.findViewById<ImageView>(R.id.info_window_thumbnail))
                 .placeholder(R.drawable.placeholder_image)
                 .error(R.drawable.placeholder_image)
