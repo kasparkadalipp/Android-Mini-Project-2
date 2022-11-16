@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat.startActivity
 import com.google.android.gms.maps.GoogleMap
@@ -12,6 +13,7 @@ import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
 import com.google.android.gms.maps.model.Marker
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
+import com.koushikdutta.ion.Ion
 
 class InfoWindowAdapter(val context: Context, val mMap: GoogleMap) : InfoWindowAdapter {
     var infoWindow: View = LayoutInflater.from(context).inflate(R.layout.info_window, null)
@@ -23,12 +25,13 @@ class InfoWindowAdapter(val context: Context, val mMap: GoogleMap) : InfoWindowA
         infoWindow.findViewById<TextView>(R.id.info_description).text = wikiPage.description
         mMap.setOnInfoWindowClickListener { openWikiPage(wikiPage.pageId) }
 
-//        infoWindow.findViewById<Button>(R.id.info_window_button).setOnClickListener{
-//            val openURL = Intent(Intent.ACTION_VIEW)
-//            openURL.data = Uri.parse("https://en.wikipedia.org/w/index.php?curid=${wikiPage.pageId}")
-//            startActivity(context, openURL, null)
-//        }
-//        infoWindow.findViewById<ImageView>(R.id.info_window_thumbnail).setImageBitmap() // TODO
+        if (wikiPage.thumbnailUrl.isNotEmpty()) {
+            // TODO doesn't infoWindow
+            Ion.with(infoWindow.findViewById<ImageView>(R.id.info_window_thumbnail))
+                .placeholder(R.drawable.placeholder_image)
+                .error(R.drawable.placeholder_image)
+                .load(wikiPage.thumbnailUrl)
+        }
     }
 
     private fun openWikiPage(pageId: Int){
@@ -50,5 +53,6 @@ class InfoWindowAdapter(val context: Context, val mMap: GoogleMap) : InfoWindowA
     data class Info(
         @SerializedName("description") val description: String,
         @SerializedName("pageId") val pageId: Int,
+        @SerializedName("thumbnailUrl") val thumbnailUrl: String,
     )
 }

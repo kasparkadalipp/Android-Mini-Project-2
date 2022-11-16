@@ -76,12 +76,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         RequestHelper.PointOfInterestRequestHandler { poiList: List<PointOfInterest> ->
             removeExpiredMarkers(currentMapMarkers, poiList)
             poiList.forEach { poi ->
-                val marker: Marker? = mMap.addMarker(MarkerOptions()
-                    .position(poi.latLng)
-                    .title(poi.title)
-                    .snippet("""{"description":"${poi.description}","pageId":"${poi.pageId}"}"""
-                    )
-//                    .icon(poi.thumbnailUrl) // TODO
+                val marker: Marker? = mMap.addMarker(
+                    MarkerOptions()
+                        .position(poi.latLng)
+                        .title(poi.title)
+                        .snippet("""{"description":"${poi.description}","pageId":"${poi.pageId}", "thumbnailUrl":"${poi.thumbnailUrl}"}""")
                 )
                 marker?.let { currentMapMarkers.add(it) }
             }
