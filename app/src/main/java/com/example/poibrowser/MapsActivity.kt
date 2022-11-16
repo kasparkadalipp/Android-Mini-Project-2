@@ -63,7 +63,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         mMap = googleMap
         mMap.setOnMarkerClickListener(this)
         mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.style_json))
-        mMap.setInfoWindowAdapter(InfoWindowAdapter(this))
+        mMap.setInfoWindowAdapter(InfoWindowAdapter(this, mMap))
         checkLocationPermissions()
     }
 
@@ -169,7 +169,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
             ),
             LOCATION_PERMISSION_REQUEST_CODE
         )
-
     }
 
     private fun showMissingPermissionAlert() {
