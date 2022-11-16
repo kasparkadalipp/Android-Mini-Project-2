@@ -33,9 +33,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     private lateinit var requestHelper: RequestHelper
 
     private var currentMapMarkers = mutableListOf<Marker>()
-    private var currentPoiList = mutableMapOf<Marker, PointOfInterest>()
+    private var currentPoiList = mutableMapOf<String, PointOfInterest>()
 
     private var isInitialLocationCall = true
+    private var lastClickedMarker: Marker? = null
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1
@@ -75,9 +76,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
 
     override fun onMarkerClick(marker: Marker): Boolean {
         binding.infoWindow.visibility = View.VISIBLE
+
+        lastClickedMarker?.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+        lastClickedMarker = marker
         marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
 
-        val wikiPage = currentPoiList[marker]
+        val wikiPage = currentPoiList[marker.id]
         binding.infoDescription.text = wikiPage?.description
         binding.infoTitle.text = wikiPage?.title
         if (wikiPage != null) {
@@ -115,7 +119,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
                 val marker: Marker? = mMap.addMarker(MarkerOptions().position(poi.latLng))
                 marker?.let {
                     currentMapMarkers.add(it)
-                    currentPoiList[it] = poi
+                    currentPoiList[it.id] = poi
                 }
             }
         }
