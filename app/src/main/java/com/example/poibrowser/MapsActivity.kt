@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -80,15 +81,23 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         binding.infoDescription.text = wikiPage?.description
         binding.infoTitle.text = wikiPage?.title
         if (wikiPage != null) {
-            if (wikiPage.thumbnailUrl?.isNotEmpty() == true) {
-                Ion.with(binding.infoWindowThumbnail)
-                    .placeholder(R.drawable.placeholder_image)
-                    .error(R.drawable.placeholder_image)
-                    .load(wikiPage.thumbnailUrl)
-            }
+            Ion.with(binding.infoWindowThumbnail)
+                .placeholder(R.drawable.placeholder_image)
+                .error(R.drawable.placeholder_image)
+                .load(wikiPage.thumbnailUrl).withBitmapInfo()
+                .setCallback { e, result ->
+                    if (e == null) {
+                        val bmp = result?.bitmapInfo?.bitmap
+                        val imageView = binding.infoWindowThumbnail
+                        imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+                        imageView.setImageBitmap(bmp)
+                    }
+                }
+
             binding.infoWindowButton.setOnClickListener {
                 openWikiPage(wikiPage.pageId)
             }
+
         }
         return false
     }
