@@ -17,6 +17,7 @@ import com.google.android.gms.maps.GoogleMap.*
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.koushikdutta.ion.Ion
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -28,6 +29,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     private lateinit var requestHelper: RequestHelper
 
     private var currentMapMarkers = mutableListOf<Marker>()
+    private var currentPoiList = mutableMapOf<Marker,PointOfInterest>()
 
     private var isInitialLocationCall = true
 
@@ -63,12 +65,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         mMap = googleMap
         mMap.setOnMarkerClickListener(this)
         mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.style_json))
-        mMap.setInfoWindowAdapter(InfoWindowAdapter(this, mMap))
+//        mMap.setInfoWindowAdapter(InfoWindowAdapter(this, mMap)) // TODO infoWindow
         checkLocationPermissions()
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
         marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
+        val wikiPage = currentPoiList[marker]
+        binding.infoDescription.text = wikiPage?.description
+        binding.infoTitle.text = wikiPage?.title
+        if (wikiPage?.thumbnailUrl?.isNotEmpty() == true) {
+            Ion.with(binding.infoWindowThumbnail)
+                .placeholder(R.drawable.placeholder_image)
+                .error(R.drawable.placeholder_image)
+                .load(wikiPage.thumbnailUrl)
+        }
         return false
     }
 
@@ -82,7 +93,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
                         .title(poi.title)
                         .snippet("""{"description":"${poi.description}","pageId":"${poi.pageId}", "thumbnailUrl":"${poi.thumbnailUrl}"}""")
                 )
-                marker?.let { currentMapMarkers.add(it) }
+                marker?.let {
+                    currentMapMarkers.add(it)
+                    currentPoiList[it] = poi
+                }
             }
         }
 
@@ -178,7 +192,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
             .setMessage("Location permissions must be allowed in order for the app to work properly. Please allow location permissions in the app settings.")
             .setPositiveButton("OK") { dialog, which ->
                 dialog.dismiss()
-
             }
             .show()
     }
