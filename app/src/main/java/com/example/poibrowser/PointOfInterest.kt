@@ -4,10 +4,10 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.gson.JsonArray
 
 data class PointOfInterest(
-    val pageId: Int? = null,
+    val pageId: Int,
     val markerId: Int? = null,
     val title: String,
-    val description: String? = null,
+    val description: String,
     val coordinates: JsonArray? = null,
     val latLng: LatLng,
     val latitude: Double? = null,

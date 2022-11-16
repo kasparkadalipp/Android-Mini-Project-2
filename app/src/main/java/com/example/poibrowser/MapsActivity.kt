@@ -2,7 +2,9 @@ package com.example.poibrowser
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -29,7 +31,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     private lateinit var requestHelper: RequestHelper
 
     private var currentMapMarkers = mutableListOf<Marker>()
-    private var currentPoiList = mutableMapOf<Marker,PointOfInterest>()
+    private var currentPoiList = mutableMapOf<Marker, PointOfInterest>()
 
     private var isInitialLocationCall = true
 
@@ -74,13 +76,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         val wikiPage = currentPoiList[marker]
         binding.infoDescription.text = wikiPage?.description
         binding.infoTitle.text = wikiPage?.title
-        if (wikiPage?.thumbnailUrl?.isNotEmpty() == true) {
-            Ion.with(binding.infoWindowThumbnail)
-                .placeholder(R.drawable.placeholder_image)
-                .error(R.drawable.placeholder_image)
-                .load(wikiPage.thumbnailUrl)
+        if (wikiPage != null) {
+            if (wikiPage.thumbnailUrl?.isNotEmpty() == true) {
+                Ion.with(binding.infoWindowThumbnail)
+                    .placeholder(R.drawable.placeholder_image)
+                    .error(R.drawable.placeholder_image)
+                    .load(wikiPage.thumbnailUrl)
+            }
+            binding.infoWindowButton.setOnClickListener {
+                openWikiPage(wikiPage.pageId)
+            }
         }
         return false
+    }
+
+    private fun openWikiPage(pageId: Int) {
+        val openURL = Intent(Intent.ACTION_VIEW)
+        openURL.data = Uri.parse("https://en.wikipedia.org/w/index.php?curid=${pageId}")
+        ContextCompat.startActivity(this, openURL, null)
     }
 
     private val pointOfInterestRequestHandler =
