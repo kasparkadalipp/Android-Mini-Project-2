@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
@@ -210,8 +209,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     }
 
     private fun showMissingPermissionAlert() {
-        // TODO: Instead of a toast, show a dialog to change the permission via settings
-
         AlertDialog.Builder(this)
             .setTitle("Location permission required")
             .setMessage("Location permissions must be allowed in order for the app to work properly. Please allow location permissions in the app settings.")
