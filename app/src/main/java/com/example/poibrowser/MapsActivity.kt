@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -50,6 +51,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         locationHelper = LocationHelper(applicationContext, this)
         mapFragment.getMapAsync(this)
 
+        binding.infoWindow.visibility = View.INVISIBLE
         requestHelper = RequestHelper(applicationContext, pointOfInterestRequestHandler)
     }
 
@@ -71,7 +73,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
+        binding.infoWindow.visibility = View.VISIBLE
         marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
+
         val wikiPage = currentPoiList[marker]
         binding.infoDescription.text = wikiPage?.description
         binding.infoTitle.text = wikiPage?.title
@@ -86,7 +90,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
                 openWikiPage(wikiPage.pageId)
             }
         }
-        return true
+        return false
     }
 
     private fun openWikiPage(pageId: Int) {
@@ -99,12 +103,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         RequestHelper.PointOfInterestRequestHandler { poiList: List<PointOfInterest> ->
             removeExpiredMarkers(currentMapMarkers, poiList)
             poiList.forEach { poi ->
-                val marker: Marker? = mMap.addMarker(
-                    MarkerOptions()
-                        .position(poi.latLng)
-                        .title(poi.title)
-                        .snippet("""{"description":"${poi.description}","pageId":"${poi.pageId}", "thumbnailUrl":"${poi.thumbnailUrl}"}""")
-                )
+                val marker: Marker? = mMap.addMarker(MarkerOptions().position(poi.latLng))
                 marker?.let {
                     currentMapMarkers.add(it)
                     currentPoiList[it] = poi
