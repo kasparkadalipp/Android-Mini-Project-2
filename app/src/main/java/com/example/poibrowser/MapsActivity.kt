@@ -32,8 +32,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     private lateinit var locationHelper: LocationHelper
     private lateinit var requestHelper: RequestHelper
 
-    private var currentMapMarkers = mutableListOf<Marker>()
-    private var currentPoiList = mutableMapOf<String, PointOfInterest>()
+    private var currentMapMarkers = mutableMapOf<Marker, PointOfInterest>()
 
     private var isInitialLocationCall = true
     private var lastClickedMarker: Marker? = null
@@ -81,7 +80,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         lastClickedMarker = marker
         marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
 
-        val wikiPage = currentPoiList[marker.id]
+        val wikiPage = currentMapMarkers[marker]
         binding.infoDescription.text = wikiPage?.description
         binding.infoTitle.text = wikiPage?.title
         if (wikiPage != null) {
@@ -116,10 +115,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         RequestHelper.PointOfInterestRequestHandler { poiList: List<PointOfInterest> ->
             removeExpiredMarkers(currentMapMarkers, poiList)
             poiList.forEach { poi ->
-                val marker: Marker? = mMap.addMarker(MarkerOptions().position(poi.latLng))
-                marker?.let {
-                    currentMapMarkers.add(it)
-                    currentPoiList[it.id] = poi
+                val locations = currentMapMarkers.map { it.value.pageId }
+                if (!locations.contains(poi.pageId)) {
+                    val marker: Marker? = mMap.addMarker(MarkerOptions().position(poi.latLng))
+                    marker?.let { currentMapMarkers[it] = poi }
                 }
             }
         }
@@ -129,11 +128,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
      * If an existing marker's location is not included in the new points of interest, remove it.
      */
     private fun removeExpiredMarkers(
-        previousMarkers: MutableList<Marker>,
+        previousMarkers: MutableMap<Marker, PointOfInterest>,
         poiList: List<PointOfInterest>
     ) {
         val locations = poiList.map { poi -> poi.latLng }
-        previousMarkers.forEach { marker ->
+        previousMarkers.keys.forEach { marker ->
             if (!locations.contains(marker.position)) {
                 marker.remove()
             }
