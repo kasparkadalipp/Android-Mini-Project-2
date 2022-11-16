@@ -63,7 +63,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
         mMap = googleMap
         mMap.setOnMarkerClickListener(this)
         mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this, R.raw.style_json))
-        mMap.setInfoWindowAdapter(MyInfoWindowAdapter(this))
+        mMap.setInfoWindowAdapter(InfoWindowAdapter(this))
         checkLocationPermissions()
     }
 
