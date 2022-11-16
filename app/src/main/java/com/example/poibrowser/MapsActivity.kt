@@ -77,7 +77,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListe
     override fun onMarkerClick(marker: Marker): Boolean {
         binding.infoWindow.visibility = View.VISIBLE
 
-        lastClickedMarker?.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+        if (currentMapMarkers.contains(lastClickedMarker)) {
+            lastClickedMarker?.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+        }
         lastClickedMarker = marker
         marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
 
